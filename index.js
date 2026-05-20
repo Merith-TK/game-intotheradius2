@@ -3,6 +3,7 @@ const { fs, log, util, handlers } = require('vortex-api');
 
 const GAME_DISPLAY_NAME = 'Into the Radius 2';
 const GAME_INTERNAL_ID = 'IntoTheRadius2';
+const GAME_FOLDER_NAME = 'IntoTheRadius2';
 const GAME_EXECUTABLE = 'IntoTheRadius2.exe';
 const GAME_STEAM_ID = '2307350';
 const GAME_SHORT_NAME = 'ITR2';
@@ -11,9 +12,9 @@ const GAME_SHORT_NAME = 'ITR2';
 var GAME_NEXUS_ID = GAME_INTERNAL_ID.toLowerCase();
 
 // Commonly used directories for mod files
-var pakDir = path.join(GAME_INTERNAL_ID, 'Content', 'Paks');
-var binDir = path.join(GAME_INTERNAL_ID, 'Binaries', 'Win64');
-var modsDir = path.join(GAME_INTERNAL_ID, 'Content', 'Mods');
+var pakDir = path.join(GAME_FOLDER_NAME, 'Content', 'Paks');
+var binDir = path.join(GAME_FOLDER_NAME, 'Binaries', 'Win64');
+var modsDir = path.join(GAME_FOLDER_NAME, 'Content', 'Mods');
 const VALID_EXTENSIONS = ['.pak', '.utoc', '.ucas', '.uplugin', '.lua', '.ini', '.txt', '.dll'];
 
 function findGame() {
