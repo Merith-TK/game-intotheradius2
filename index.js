@@ -3,6 +3,7 @@ const { fs, log, util, handlers } = require('vortex-api');
 
 const GAME_DISPLAY_NAME = 'Into the Radius 2';
 const GAME_INTERNAL_ID = 'IntoTheRadius2';
+const GAME_FOLDER_NAME = 'IntoTheRadius2';
 const GAME_EXECUTABLE = 'IntoTheRadius2.exe';
 const GAME_STEAM_ID = '2307350';
 const GAME_SHORT_NAME = 'ITR2';
@@ -11,9 +12,9 @@ const GAME_SHORT_NAME = 'ITR2';
 var GAME_NEXUS_ID = GAME_INTERNAL_ID.toLowerCase();
 
 // Commonly used directories for mod files
-var pakDir = path.join(GAME_INTERNAL_ID, 'Content', 'Paks');
-var binDir = path.join(GAME_INTERNAL_ID, 'Binaries', 'Win64');
-var modsDir = path.join(GAME_INTERNAL_ID, 'Mods');
+var pakDir = path.join(GAME_FOLDER_NAME, 'Content', 'Paks');
+var binDir = path.join(GAME_FOLDER_NAME, 'Binaries', 'Win64');
+var modsDir = path.join(GAME_FOLDER_NAME, 'Mods');
 const VALID_EXTENSIONS = ['.pak', '.utoc', '.ucas', '.uplugin', '.lua', '.ini', '.txt', '.dll'];
 
 function findGame() {
@@ -228,12 +229,30 @@ function installContent(files) {
 	// Handle UE4SS mods
 	if (files.some(f => path.basename(f) === 'UE4SS.dll' && path.dirname(f) === 'ue4ss')) {
 		log('debug', "["+GAME_SHORT_NAME+" [INSTALL] Copying UE4SS.dll, UE4SS-settings.ini, and Mods to root directory");
+
+		const dwmapiFile = files.find(f => path.basename(f) === 'dwmapi.dll');
+		if (dwmapiFile) {
+			instructions.push({ type: 'copy', source: dwmapiFile, destination: path.join(binDir, 'dwmapi.dll') });
+		}
+
 		instructions.push(
-			{ type: 'copy', source: files.find(f => path.basename(f) === 'dwmapi.dll'), destination: path.join(binDir, 'dwmapi.dll') },
 			{ type: 'copy', source: files.find(f => path.basename(f) === 'UE4SS.dll' && path.dirname(f) === 'ue4ss'), destination: path.join(pakDir, 'UE4SS.dll') },
-			{ type: 'copy', source: files.find(f => path.basename(f) === 'UE4SS-settings.ini' && path.dirname(f) === 'ue4ss'), destination: path.join(pakDir, 'UE4SS-settings.ini') },
-			{ type: 'copy', source: files.find(f => path.basename(f) === 'Mods' && path.dirname(f) === 'ue4ss'), destination: path.join(pakDir, 'LuaMods') }
+			{ type: 'copy', source: files.find(f => path.basename(f) === 'UE4SS-settings.ini' && path.dirname(f) === 'ue4ss'), destination: path.join(pakDir, 'UE4SS-settings.ini') }
 		);
+
+		// 'Mods' is a directory, not a file entry, so it can't be copied with a single
+		// instruction. Copy every file under ue4ss/Mods individually instead.
+		const modsPrefix = path.join('ue4ss', 'Mods') + path.sep;
+		const ue4ssModsFiles = files.filter(f => f.startsWith(modsPrefix));
+		for (const modFile of ue4ssModsFiles) {
+			const relPath = modFile.slice(modsPrefix.length);
+			instructions.push({
+				type: 'copy',
+				source: modFile,
+				destination: path.join(pakDir, 'LuaMods', relPath),
+			});
+		}
+
 		return Promise.resolve({ instructions });
 	}
 
